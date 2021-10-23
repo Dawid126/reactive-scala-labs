@@ -30,23 +30,87 @@ object Checkout {
 }
 
 class Checkout extends Actor {
+  import context._
 
   private val scheduler = context.system.scheduler
   private val log       = Logging(context.system, this)
 
-  val checkoutTimerDuration = 1 seconds
-  val paymentTimerDuration  = 1 seconds
+  val checkoutTimerDuration = 10 seconds
+  val paymentTimerDuration  = 10 seconds
 
-  def receive: Receive = ???
+  var deliveryMethod = ""
+  var paymentMethod = ""
 
-  def selectingDelivery(timer: Cancellable): Receive = ???
+  private def checkoutTimer: Cancellable =
+    scheduler.scheduleOnce(checkoutTimerDuration, self, ExpireCheckout)
 
-  def selectingPaymentMethod(timer: Cancellable): Receive = ???
+  private def paymentTimer: Cancellable =
+    scheduler.scheduleOnce(paymentTimerDuration, self, ExpirePayment)
 
-  def processingPayment(timer: Cancellable): Receive = ???
+  def receive: Receive = startCheckout
 
-  def cancelled: Receive = ???
+  def startCheckout: Receive = {
+    case StartCheckout =>
+      context become selectingDelivery(checkoutTimer)
+  }
 
-  def closed: Receive = ???
+  def selectingDelivery(timer: Cancellable): Receive = {
+    case SelectDeliveryMethod(method: String) =>
+      this.deliveryMethod = method
+      timer.cancel()
+      context become selectingPaymentMethod(checkoutTimer)
+
+    case ExpireCheckout =>
+      timer.cancel()
+      println("Checkout time expired.")
+      context become cancelled
+
+    case CancelCheckout =>
+      timer.cancel()
+      context become cancelled
+  }
+
+  def selectingPaymentMethod(timer: Cancellable): Receive = {
+    case SelectPayment(method: String) =>
+      this.paymentMethod = method
+      timer.cancel()
+      context become processingPayment(paymentTimer)
+
+    case ExpireCheckout =>
+      timer.cancel()
+      println("Checkout time has expired.")
+      context become cancelled
+
+    case CancelCheckout =>
+      timer.cancel()
+      context become cancelled
+  }
+
+  def processingPayment(timer: Cancellable): Receive = {
+    case ConfirmPaymentReceived =>
+      timer.cancel()
+      println("Transaction complete.")
+      context become closed
+
+    case ExpirePayment =>
+      timer.cancel()
+      println("Payment time has expired.")
+      context become cancelled
+
+    case CancelCheckout =>
+      timer.cancel()
+      println("Checkout process cancelled.")
+      context become cancelled
+  }
+
+  def cancelled: Receive = {
+    case _ =>
+      context.stop(self)
+  }
+
+  def closed: Receive = {
+    case _ =>
+      context.stop(self)
+  }
 
 }
