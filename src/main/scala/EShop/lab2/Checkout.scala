@@ -104,11 +104,13 @@ class Checkout extends Actor {
   }
 
   def cancelled: Receive = {
-    _ => context.stop(self)
+    case _ =>
+      context.stop(self)
   }
 
   def closed: Receive = {
-    _ => context.stop(self)
+    case _ =>
+      context.stop(self)
   }
 
 }

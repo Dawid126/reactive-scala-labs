@@ -118,14 +118,16 @@ class TypedCheckout {
   )
 
   def cancelled: Behavior[TypedCheckout.Command] = Behaviors.receive(
-    (_, _) => {
+    (_, msg) => msg match {
+    case _ =>
       Behaviors.stopped
     }
   )
 
   def closed: Behavior[TypedCheckout.Command] = Behaviors.receive(
-    (_, _) => {
-      Behaviors.stopped
+    (_, msg) => msg match {
+      case _ =>
+        Behaviors.stopped
     }
   )
 
