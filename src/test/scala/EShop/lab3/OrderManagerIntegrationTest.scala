@@ -1,6 +1,7 @@
 package EShop.lab3
 
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
+import akka.actor.typed.scaladsl.StashBuffer
 import akka.actor.typed.{ActorRef, Scheduler}
 import akka.util.Timeout
 import org.scalatest.BeforeAndAfterAll
@@ -33,6 +34,8 @@ class OrderManagerIntegrationTest
 
   it should "supervise whole order process" in {
     val orderManager = testKit.spawn(new OrderManager().start).ref
+
+    sendMessage(orderManager, Initialize)
 
     sendMessage(orderManager, AddItem("rollerblades", _))
 
