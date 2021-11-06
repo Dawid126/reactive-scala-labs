@@ -1,7 +1,6 @@
 package EShop.lab3
 
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
-import akka.actor.typed.scaladsl.StashBuffer
 import akka.actor.typed.{ActorRef, Scheduler}
 import akka.util.Timeout
 import org.scalatest.BeforeAndAfterAll
@@ -10,6 +9,10 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
+import akka.pattern.ask
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpecLike
+import org.scalatest.matchers.should.Matchers
 
 class OrderManagerIntegrationTest
   extends ScalaTestWithActorTestKit

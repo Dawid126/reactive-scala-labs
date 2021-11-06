@@ -1,9 +1,8 @@
 package EShop.lab2
 
-import EShop.lab2
 import EShop.lab3.OrderManager
 import akka.actor.Cancellable
-import akka.actor.testkit.typed.scaladsl.{ActorTestKit, BehaviorTestKit, ScalaTestWithActorTestKit, TestInbox}
+import akka.actor.testkit.typed.scaladsl.{ActorTestKit, ScalaTestWithActorTestKit}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 import org.scalatest.flatspec.AnyFlatSpecLike
@@ -192,9 +191,9 @@ object TypedCartActorTest {
   val inCheckoutMsg = "inCheckout"
 
   def cartActorWithCartSizeResponseOnStateChange(
-                                                  testKit: ActorTestKit,
-                                                  probe: ActorRef[Any]
-                                                ): ActorRef[TypedCartActor.Command] =
+    testKit: ActorTestKit,
+    probe: ActorRef[Any]
+  ): ActorRef[TypedCartActor.Command] =
     testKit.spawn {
       val cartActor = new TypedCartActor {
         override val cartTimerDuration: FiniteDuration = 1.seconds
@@ -218,13 +217,6 @@ object TypedCartActorTest {
             probe ! inCheckoutMsg
             probe ! cart.size
             super.inCheckout(cart)
-          })
-
-        override def closed: Behavior[TypedCartActor.Command] =
-          Behaviors.setup(_ => {
-            probe ! emptyMsg
-            probe ! 0
-            super.closed
           })
 
       }
