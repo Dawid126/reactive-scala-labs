@@ -1,10 +1,12 @@
 package EShop.lab2
 
+import EShop.lab2
+import EShop.lab3.OrderManager
 import akka.actor.Cancellable
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
-import scala.language.postfixOps
 
+import scala.language.postfixOps
 import scala.concurrent.duration._
 
 object TypedCartActor {
@@ -12,10 +14,11 @@ object TypedCartActor {
   sealed trait Command
   case class AddItem(item: Any)        extends Command
   case class RemoveItem(item: Any)     extends Command
+  case class StartCheckout(replyTo: ActorRef[OrderManager.Command])            extends Command
   case object ExpireCart               extends Command
-  case object StartCheckout            extends Command
   case object ConfirmCheckoutCancelled extends Command
   case object ConfirmCheckoutClosed    extends Command
+  case class GetItems(sender: ActorRef[Cart])                               extends Command
 
   case object Print                    extends Command
 
@@ -42,6 +45,14 @@ class TypedCartActor {
 
       case Print =>
         println("Current cart: empty")
+        Behaviors.same
+
+      case StartCheckout(replyTo) =>
+        replyTo ! OrderManager.OperationFailed
+        Behaviors.same
+
+      case GetItems(sender) =>
+        sender ! Cart(Seq())
         Behaviors.same
 
       case _ =>
@@ -71,8 +82,11 @@ class TypedCartActor {
           println("No such item in the cart.")
           Behaviors.same
         }
-      case StartCheckout =>
+      case StartCheckout(replyTo) =>
         timer.cancel()
+        val checkoutActor = context.spawn(new TypedCheckout(context.self).start, "checkoutActor")
+        replyTo ! OrderManager.ConfirmCheckoutStarted(checkoutActor)
+        checkoutActor ! TypedCheckout.StartCheckout
         inCheckout(cart)
 
       case ExpireCart =>
@@ -80,8 +94,8 @@ class TypedCartActor {
         println("Cart tine has expired.")
         empty
 
-      case Print =>
-        println("Current cart content: " + cart)
+      case GetItems(sender) =>
+        sender ! cart
         Behaviors.same
 
       case _ =>
@@ -96,14 +110,21 @@ class TypedCartActor {
 
       case ConfirmCheckoutClosed =>
         println("Cart closed after checkout")
-        empty
+        closed
 
-      case Print =>
-        println("Current cart: " + cart)
+      case GetItems(sender) =>
+        sender ! cart
         Behaviors.same
 
       case _ =>
         Behaviors.same
+    }
+  )
+
+  def closed: Behavior[lab2.TypedCartActor.Command] = Behaviors.receive(
+    (_, msg) => msg match {
+      case _ =>
+        Behaviors.stopped
     }
   )
 
