@@ -20,10 +20,23 @@ object TypedCartActor {
   case object ConfirmCheckoutClosed    extends Command
   case class GetItems(sender: ActorRef[Cart])                               extends Command
 
-  case object Print                    extends Command
-
   sealed trait Event
   case class CheckoutStarted(checkoutRef: ActorRef[TypedCheckout.Command]) extends Event
+  case class ItemAdded(item: Any)                                          extends Event
+  case class ItemRemoved(item: Any)                                        extends Event
+  case object CartEmptied                                                  extends Event
+  case object CartExpired                                                  extends Event
+  case object CheckoutClosed                                               extends Event
+  case object CheckoutCancelled                                            extends Event
+
+  sealed abstract class State(val timerOpt: Option[Cancellable]) {
+    def cart: Cart
+  }
+  case object Empty extends State(None) {
+    def cart: Cart = Cart.empty
+  }
+  case class NonEmpty(cart: Cart, timer: Cancellable) extends State(Some(timer))
+  case class InCheckout(cart: Cart)
 }
 
 class TypedCartActor {
@@ -42,10 +55,6 @@ class TypedCartActor {
       case AddItem(item) =>
         println("Item added: " + item)
         nonEmpty(Cart(Seq(item)), scheduleTimer(context))
-
-      case Print =>
-        println("Current cart: empty")
-        Behaviors.same
 
       case StartCheckout(replyTo) =>
         replyTo ! OrderManager.OperationFailed
