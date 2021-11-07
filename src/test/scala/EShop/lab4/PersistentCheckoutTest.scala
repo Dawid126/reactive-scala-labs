@@ -48,14 +48,14 @@ class PersistentCheckoutTest
   it should "be in selectingDelivery state after checkout start" in {
     val resultStartCheckout = eventSourcedTestKit.runCommand(StartCheckout)
 
-    resultStartCheckout.event shouldBe CheckoutStarted
+    resultStartCheckout.event.isInstanceOf[CheckoutStarted]
     resultStartCheckout.state.isInstanceOf[SelectingDelivery] shouldBe true
   }
 
   it should "be in cancelled state after cancel message received in selectingDelivery State" in {
     val resultStartCheckout = eventSourcedTestKit.runCommand(StartCheckout)
 
-    resultStartCheckout.event shouldBe CheckoutStarted
+    resultStartCheckout.event.isInstanceOf[CheckoutStarted]
     resultStartCheckout.state.isInstanceOf[SelectingDelivery] shouldBe true
 
     val resultCancelCheckout = eventSourcedTestKit.runCommand(CancelCheckout)
@@ -67,7 +67,7 @@ class PersistentCheckoutTest
   it should "be in cancelled state after expire checkout timeout in selectingDelivery state" in {
     val resultStartCheckout = eventSourcedTestKit.runCommand(StartCheckout)
 
-    resultStartCheckout.event shouldBe CheckoutStarted
+    resultStartCheckout.event.isInstanceOf[CheckoutStarted]
     resultStartCheckout.state.isInstanceOf[SelectingDelivery] shouldBe true
 
     Thread.sleep(2000)
@@ -81,7 +81,7 @@ class PersistentCheckoutTest
   it should "be in selectingPayment state after delivery method selected" in {
     val resultStartCheckout = eventSourcedTestKit.runCommand(StartCheckout)
 
-    resultStartCheckout.event shouldBe CheckoutStarted
+    resultStartCheckout.event.isInstanceOf[CheckoutStarted]
     resultStartCheckout.state.isInstanceOf[SelectingDelivery] shouldBe true
 
     val resultSelectDelivery = eventSourcedTestKit.runCommand(SelectDeliveryMethod(deliveryMethod))
@@ -93,7 +93,7 @@ class PersistentCheckoutTest
   it should "be in cancelled state after cancel message received in selectingPayment State" in {
     val resultStartCheckout = eventSourcedTestKit.runCommand(StartCheckout)
 
-    resultStartCheckout.event shouldBe CheckoutStarted
+    resultStartCheckout.event.isInstanceOf[CheckoutStarted]
     resultStartCheckout.state.isInstanceOf[SelectingDelivery] shouldBe true
 
     val resultSelectDelivery = eventSourcedTestKit.runCommand(SelectDeliveryMethod(deliveryMethod))
@@ -110,7 +110,7 @@ class PersistentCheckoutTest
   it should "be in cancelled state after expire checkout timeout in selectingPayment state" in {
     val resultStartCheckout = eventSourcedTestKit.runCommand(StartCheckout)
 
-    resultStartCheckout.event shouldBe CheckoutStarted
+    resultStartCheckout.event.isInstanceOf[CheckoutStarted]
     resultStartCheckout.state.isInstanceOf[SelectingDelivery] shouldBe true
 
     val resultSelectDelivery = eventSourcedTestKit.runCommand(SelectDeliveryMethod(deliveryMethod))
@@ -129,7 +129,7 @@ class PersistentCheckoutTest
   it should "be in processingPayment state after payment selected" in {
     val resultStartCheckout = eventSourcedTestKit.runCommand(StartCheckout)
 
-    resultStartCheckout.event shouldBe CheckoutStarted
+    resultStartCheckout.event.isInstanceOf[CheckoutStarted]
     resultStartCheckout.state.isInstanceOf[SelectingDelivery] shouldBe true
 
     val resultSelectDelivery = eventSourcedTestKit.runCommand(SelectDeliveryMethod(deliveryMethod))
@@ -146,7 +146,7 @@ class PersistentCheckoutTest
   it should "be in cancelled state after cancel message received in processingPayment State" in {
     val resultStartCheckout = eventSourcedTestKit.runCommand(StartCheckout)
 
-    resultStartCheckout.event shouldBe CheckoutStarted
+    resultStartCheckout.event.isInstanceOf[CheckoutStarted]
     resultStartCheckout.state.isInstanceOf[SelectingDelivery] shouldBe true
 
     val resultSelectDelivery = eventSourcedTestKit.runCommand(SelectDeliveryMethod(deliveryMethod))
@@ -168,7 +168,7 @@ class PersistentCheckoutTest
   it should "be in cancelled state after expire checkout timeout in processingPayment state" in {
     val resultStartCheckout = eventSourcedTestKit.runCommand(StartCheckout)
 
-    resultStartCheckout.event shouldBe CheckoutStarted
+    resultStartCheckout.event.isInstanceOf[CheckoutStarted]
     resultStartCheckout.state.isInstanceOf[SelectingDelivery] shouldBe true
 
     val resultSelectDelivery = eventSourcedTestKit.runCommand(SelectDeliveryMethod(deliveryMethod))
@@ -192,7 +192,7 @@ class PersistentCheckoutTest
   it should "be in closed state after payment completed" in {
     val resultStartCheckout = eventSourcedTestKit.runCommand(StartCheckout)
 
-    resultStartCheckout.event shouldBe CheckoutStarted
+    resultStartCheckout.event.isInstanceOf[CheckoutStarted]
     resultStartCheckout.state.isInstanceOf[SelectingDelivery] shouldBe true
 
     val resultSelectDelivery = eventSourcedTestKit.runCommand(SelectDeliveryMethod(deliveryMethod))
@@ -207,14 +207,14 @@ class PersistentCheckoutTest
 
     val resultReceivePayment = eventSourcedTestKit.runCommand(ConfirmPaymentReceived)
 
-    resultReceivePayment.event shouldBe CheckOutClosed
+    resultReceivePayment.event shouldBe CheckoutClosed
     resultReceivePayment.state shouldBe Closed
   }
 
   it should "not change state after cancel msg in completed state" in {
     val resultStartCheckout = eventSourcedTestKit.runCommand(StartCheckout)
 
-    resultStartCheckout.event shouldBe CheckoutStarted
+    resultStartCheckout.event.isInstanceOf[CheckoutStarted]
     resultStartCheckout.state.isInstanceOf[SelectingDelivery] shouldBe true
 
     val resultSelectDelivery = eventSourcedTestKit.runCommand(SelectDeliveryMethod(deliveryMethod))
@@ -229,7 +229,7 @@ class PersistentCheckoutTest
 
     val resultReceivePayment = eventSourcedTestKit.runCommand(ConfirmPaymentReceived)
 
-    resultReceivePayment.event shouldBe CheckOutClosed
+    resultReceivePayment.event shouldBe CheckoutClosed
     resultReceivePayment.state shouldBe Closed
 
     val resultCancelCheckout = eventSourcedTestKit.runCommand(CancelCheckout)

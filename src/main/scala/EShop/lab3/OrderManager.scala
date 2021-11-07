@@ -118,7 +118,7 @@ class OrderManager() {
     def finished: Behavior[OrderManager.Command] = Behaviors.receiveMessage {
       case wrapped: WrappedCheckoutResponse =>
         wrapped.response match {
-          case TypedCheckout.CheckOutClosed =>
+          case TypedCheckout.CheckoutClosed =>
             print("checkout closed")
             uninitialized
         }
