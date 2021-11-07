@@ -219,6 +219,13 @@ object TypedCartActorTest {
             super.inCheckout(cart)
           })
 
+        override def closed(): Behavior[TypedCartActor.Command] =
+          Behaviors.setup(_ => {
+            probe ! emptyMsg
+            probe ! 0
+            super.closed
+          })
+
       }
       cartActor.start
     }
