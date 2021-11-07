@@ -1,12 +1,13 @@
 package EShop.lab4
 
+import EShop.lab2.Cart
 import EShop.lab3.OrderManager
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import akka.persistence.testkit.scaladsl.EventSourcedBehaviorTestKit
+import akka.persistence.testkit.scaladsl.EventSourcedBehaviorTestKit.SerializationSettings
 import akka.persistence.typed.PersistenceId
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import akka.persistence.testkit.scaladsl.EventSourcedBehaviorTestKit.SerializationSettings
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -96,7 +97,7 @@ class PersistentCartActorTest
     val resultCancelCheckout =
       eventSourcedTestKit.runCommand(ConfirmCheckoutCancelled)
 
-    resultCancelCheckout.event shouldBe CheckoutCancelled
+    resultCancelCheckout.event.isInstanceOf[CheckoutCancelled]
     resultCancelCheckout.state.isInstanceOf[NonEmpty] shouldBe true
   }
 
@@ -158,4 +159,58 @@ class PersistentCartActorTest
     resultAdd2.hasNoEvents shouldBe true
     resultAdd2.state shouldBe Empty
   }
+
+  it should "recover added items" in {
+    val result = eventSourcedTestKit.runCommand(AddItem("Hamlet"))
+
+    result.event.isInstanceOf[ItemAdded] shouldBe true
+    result.state.isInstanceOf[NonEmpty] shouldBe true
+
+    val restartResult = eventSourcedTestKit.restart()
+
+    restartResult.state.isInstanceOf[NonEmpty] shouldBe true
+    restartResult.state.cart shouldEqual Cart.empty.addItem("Hamlet")
+  }
+
+  it should "retain the timer after restart" in {
+    val resultAdd = eventSourcedTestKit.runCommand(AddItem("King Lear"))
+
+    resultAdd.event.isInstanceOf[ItemAdded] shouldBe true
+    resultAdd.state.isInstanceOf[NonEmpty] shouldBe true
+
+    Thread.sleep(600)
+
+    val restartResult = eventSourcedTestKit.restart()
+
+    restartResult.state.isInstanceOf[NonEmpty] shouldBe true
+
+    Thread.sleep(600)
+
+    eventSourcedTestKit.getState() shouldBe Empty
+  }
+
+  it should "cancel checkout properly after restart" in {
+    val resultAdd = eventSourcedTestKit.runCommand(AddItem("Cymbelin"))
+
+    resultAdd.event.isInstanceOf[ItemAdded] shouldBe true
+    resultAdd.state.isInstanceOf[NonEmpty] shouldBe true
+
+    val resultStartCheckout =
+      eventSourcedTestKit.runCommand(StartCheckout(testKit.createTestProbe[OrderManager.Command]().ref))
+
+    resultStartCheckout.event.isInstanceOf[CheckoutStarted] shouldBe true
+    resultStartCheckout.state.isInstanceOf[InCheckout] shouldBe true
+
+    val restartResult = eventSourcedTestKit.restart()
+
+    restartResult.state.isInstanceOf[InCheckout] shouldBe true
+    restartResult.state.cart shouldEqual Cart.empty.addItem("Cymbelin")
+
+    val resultCancelCheckout =
+      eventSourcedTestKit.runCommand(ConfirmCheckoutCancelled)
+
+    resultCancelCheckout.event.isInstanceOf[CheckoutCancelled] shouldBe true
+    resultCancelCheckout.state.isInstanceOf[NonEmpty] shouldBe true
+  }
+
 }
