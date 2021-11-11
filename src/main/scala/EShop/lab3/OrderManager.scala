@@ -30,6 +30,10 @@ object OrderManager {
 
   case class WrappedCheckoutResponse(response: TypedCheckout.Event) extends Command
 
+  case object PaymentRejected extends Command
+
+  case object PaymentRestarted extends Command
+
   sealed trait Ack
 
   case object Done extends Ack //trivial ACK
@@ -70,9 +74,9 @@ class OrderManager() {
     }
 
     def inCheckout(
-      cartActorRef: ActorRef[TypedCartActor.Command],
-      senderRef: ActorRef[Ack]
-    ): Behavior[OrderManager.Command] = Behaviors.receiveMessage {
+                    cartActorRef: ActorRef[TypedCartActor.Command],
+                    senderRef: ActorRef[Ack]
+                  ): Behavior[OrderManager.Command] = Behaviors.receiveMessage {
       case ConfirmCheckoutStarted(checkoutRef) =>
         senderRef ! Done
         inCheckout2(checkoutRef)
