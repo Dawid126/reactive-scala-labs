@@ -5,6 +5,7 @@ import akka.actor.Cancellable
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
+import java.time.Instant
 import scala.language.postfixOps
 import scala.concurrent.duration._
 
@@ -15,20 +16,20 @@ object TypedCheckout {
   case class ProcessingPaymentStarted(timer: Cancellable) extends Data
 
   sealed trait Command
-  case object StartCheckout                     extends Command
-  case class SelectDeliveryMethod(method: String) extends Command
-  case object CancelCheckout                      extends Command
-  case object ExpireCheckout                      extends Command
-  case class SelectPayment(payment: String, orderManagerRef: ActorRef[OrderManager.Command])       extends Command
-  case object ExpirePayment                       extends Command
-  case object ConfirmPaymentReceived              extends Command
+  case object StartCheckout                                                                   extends Command
+  case class SelectDeliveryMethod(method: String)                                             extends Command
+  case object CancelCheckout                                                                  extends Command
+  case object ExpireCheckout                                                                  extends Command
+  case class SelectPayment(payment: String, orderManagerRef: ActorRef[OrderManager.Command])  extends Command
+  case object ExpirePayment                                                                   extends Command
+  case object ConfirmPaymentReceived                                                          extends Command
 
   sealed trait Event
-  case object CheckOutClosed                                    extends Event
-  case class PaymentStarted(payment: ActorRef[Payment.Command]) extends Event
-  case object CheckoutStarted                                   extends Event
-  case object CheckoutCancelled                                 extends Event
-  case class DeliveryMethodSelected(method: String)             extends Event
+  case object CheckoutClosed                                                             extends Event
+  case class PaymentStarted(payment: ActorRef[Payment.Command], startTime: Instant)      extends Event
+  case class CheckoutStarted(startTime: Instant)                                         extends Event
+  case object CheckoutCancelled                                                          extends Event
+  case class DeliveryMethodSelected(method: String)                                      extends Event
 
   sealed abstract class State(val timerOpt: Option[Cancellable])
   case object WaitingForStart                           extends State(None)
