@@ -1,5 +1,6 @@
 package EShop.lab5
 
+import EShop.lab5.Payment.WrappedPaymentServiceResponse
 import EShop.lab5.PaymentService.{PaymentClientError, PaymentServerError, PaymentSucceeded}
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import akka.actor.typed.ChildFailed
@@ -9,15 +10,15 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 class PaymentServiceTest extends ScalaTestWithActorTestKit with AnyFlatSpecLike {
 
   it should "response if external payment http server returned 200" in {
-    val probe = testKit.createTestProbe[PaymentService.Response]()
+    val probe = testKit.createTestProbe[Payment.Message]()
     val paymentService =
       testKit.spawn(PaymentService("visa", probe.ref))
 
-    probe.expectMessage(PaymentSucceeded)
+    probe.expectMessage(WrappedPaymentServiceResponse(PaymentSucceeded))
   }
 
   it should "fail if response from external payment http server returned 408 (Request Timeout)" in {
-    val probe   = testKit.createTestProbe[PaymentService.Response]()
+    val probe   = testKit.createTestProbe[Payment.Message]()
     val failure = testKit.createTestProbe[String]()
 
     testKit.spawn(Behaviors.setup[Any] { context =>
@@ -35,7 +36,7 @@ class PaymentServiceTest extends ScalaTestWithActorTestKit with AnyFlatSpecLike 
   }
 
   it should "fail if response from external payment http server returned 404" in {
-    val probe   = testKit.createTestProbe[PaymentService.Response]()
+    val probe   = testKit.createTestProbe[Payment.Message]()
     val failure = testKit.createTestProbe[String]()
 
     testKit.spawn(Behaviors.setup[Any] { context =>
